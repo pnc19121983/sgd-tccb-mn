@@ -840,7 +840,6 @@ st.subheader("🔐 Dành cho quản trị viên")
 
 ADMIN_PASSWORD = "12345"  # 👉 đổi mật khẩu ở đây
 
-# Trạng thái đăng nhập admin
 if "admin" not in st.session_state:
     st.session_state.admin = False
 
@@ -862,12 +861,16 @@ else:
         st.markdown("### 🧮 Dữ liệu đã nhập")
         st.dataframe(df)
 
-        # Tổng hợp
+        # 📊 Tổng hợp thông minh (chỉ lấy các cột có giá trị số)
         st.markdown("### 📊 Thống kê theo xã")
-        summary = df.groupby("Xã")[["Số học sinh", "Số giáo viên", "Số phòng học"]].sum()
-        st.dataframe(summary)
+        numeric_cols = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
+        if "Xã" in df.columns and numeric_cols:
+            summary = df.groupby("Xã")[numeric_cols].sum()
+            st.dataframe(summary)
+        else:
+            st.warning("⚠️ Không có cột số liệu nào để thống kê.")
 
-        # Xuất Excel
+        # 📤 Xuất Excel
         export_name = f"tonghop_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         df.to_excel(export_name, index=False)
 
@@ -881,7 +884,7 @@ else:
     else:
         st.warning("⚠️ Chưa có dữ liệu nào được nhập.")
 
-    # 🔄 Nút reset toàn bộ dữ liệu
+    # 🔄 Reset toàn bộ dữ liệu
     st.markdown("### ⚠️ Reset toàn bộ dữ liệu")
     st.warning("Thao tác này sẽ xóa toàn bộ dữ liệu đã nhập và đặt lại danh sách trường về trạng thái ban đầu!")
 
@@ -892,7 +895,7 @@ else:
         st.success("✅ Đã reset toàn bộ dữ liệu và danh sách trường về trạng thái ban đầu.")
         st.rerun()
 
-    # Nút đăng xuất
+    # 🚪 Nút đăng xuất
     if st.button("🚪 Đăng xuất"):
         st.session_state.admin = False
         st.rerun()
